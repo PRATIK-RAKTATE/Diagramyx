@@ -1,246 +1,203 @@
-<!-- # Caching Requirements
+# Caching Requirements  Excalidraw-like, Single User, No Lag
+
+_Last reviewed: 15 february 2026 
+
+_Owner: Pratik B. Raktate_  
+_Status: In Review
+
 
 ## Purpose
 
-This document defines caching strategies, policies, and safeguards
-to improve performance, scalability, and cost efficiency while maintaining
-data consistency and security.
+Guarantee **smooth draw/drag/pan/zoom** by caching only what moves the needle:
+
+1. **static assets (app + 250+ symbols)**
+2. **symbol metadata/index**
+3. **scene autosave**
+4. **derived runtime caches (bounds/text/hit-test)**
 
 ---
 
-## Caching Principles
+## Principles
 
-1. **Cache for Performance, Not Correctness** — system must function without cache.
-2. **Tenant-Safe Caching** — never mix data across tenants.
-3. **Short-Lived by Default** — avoid stale data risks.
-4. **Explicit Invalidation** — update cache on writes.
-5. **Sensitive Data Must Not Be Cached** — protect secrets.
+1. **Immutable assets**: if filename is hashed, cache it “forever”.
+2. **Local-first edits**: UI never waits on network.
+3. **Rev-based invalidation**: derived caches must be invalidated in O(1).
+4. **Hard limits**: memory caches must have caps (LRU) to avoid tab crashes.
+5. **Versioned keys**: app/schema/pack hash included to avoid stale mixing.
+
+---
+| Item                   | Best storage                                   | Backup/secondary             |
+| ---------------------- | ---------------------------------------------- | ---------------------------- |
+| Static assets          | Netlify CDN (from repo build output)           | Service Worker Cache Storage |
+| Symbol metadata/index  | Repo JSON (source) + IndexedDB (runtime index) | none needed                  |
+| Scene autosave         | IndexedDB                                      | Backend DB (optional later)  |
+| Derived runtime caches | In-memory only                                 | none                         |
+
+
+    Storage
+
+    1. static assets => public/symbol or if used imports src/assets/symbol
+
+    2. symbol metadata => assets/symblols/manifest.json
+
+    3. scene autosave=>  IndexDB (browser DB) later on render backend due to slow free tier
+
+    4. derived runtime caches => In memory only (JS memory) pertab
+
+# 1) Layers (Only the ones that matter)
+
+## 1. Edge/CDN (Netlify) — MUST
+
+### Scope
+
+* JS/CSS bundles, fonts
+* symbol packs (SVG/PNG), sprite sheets
+
+### Policy
+
+* Hashed assets:
+  `Cache-Control: public, max-age=31536000, immutable`
+* HTML entry:
+  `Cache-Control: no-cache` (or very short TTL)
+
+**Goal:** repeat visits load instantly; free-tier cold starts don’t matter for assets.
 
 ---
 
-# 1. Caching Layers
+## 2. Service Worker Cache Storage — MUST
 
-## 1.1 Client-Side Caching
+### Scope
 
-### Use Cases
-- Static assets
-- UI configuration
-- Non-sensitive preferences
+* Precache app shell (hashed bundles)
+* Precache symbol packs (or lazy-cache on first use)
 
-### Requirements
-- Use HTTP caching headers.
-- Do not cache sensitive data in browser storage.
+### Guardrails
 
----
+* Never cache POST/PUT responses
+* Cache names are versioned (`assets-v2`)
 
-## 1.2 API Layer Caching
-
-### Use Cases
-- Dashboard summaries
-- Search suggestions
-- Feature flags
-
-### Requirements
-- Must include tenant/workspace key in cache key.
-- Cache TTL must be defined.
+**Goal:** instant palette open + offline-ready assets.
 
 ---
 
-## 1.3 Data Layer Caching (Distributed Cache)
+## 3. IndexedDB — MUST
 
-### Use Cases
-- Frequently accessed metadata
-- Session data
-- Rate limiting counters
+### Store
 
-### Recommended Technology
-- Redis or equivalent distributed cache
+* `symbolIndex` (tags/categories/paths) keyed by `packHash`
+* `sceneSnapshots` (autosave) keyed by `docId`
 
----
+### Write rules
 
-# 2. What to Cache
+* Autosave is **debounced** (300–1000ms) and **on pointerup** for heavy operations.
+* Keep last **N=20** snapshots per doc; evict older.
 
-## 2.1 Safe to Cache
-
-| Data | Notes |
-|------|------|
-| Dashboard summaries | Tenant-scoped |
-| Search suggestions | Non-sensitive |
-| Feature flags | Low risk |
-| Rate limit counters | Operational data |
-| Session metadata | Short TTL |
+**Goal:** no lag on save + instant reload + crash recovery.
 
 ---
 
-## 2.2 Must NOT Be Cached
+## 4. In-Memory Runtime Caches — MUST
 
-| Data | Reason |
-|------|--------|
-| Vault secrets | Highly sensitive |
-| Master passwords | Security risk |
-| Decrypted vault data | Memory safety risk |
-| Recovery codes | Sensitive |
+### Cache
+
+* bounds (AABB/rotated bounds)
+* Path2D (if Canvas 2D)
+* text measurements
+* spatial index (uniform grid)
+
+### Invalidation (non-negotiable)
+
+* Each element has `rev` incremented on mutation.
+* Cache keys include `{elementId}:{rev}`.
+
+### Hard limits (LRU)
+
+* textMeasureCache: max 5k entries
+* path2DCache: max 10k entries
+* rasterCache (optional): max 64–128MB (only if you do bitmap caching)
+
+**Goal:** selection/hover/draw stays O(1)/near O(1), not O(n).
 
 ---
 
-# 3. Cache Key Design
+# 2) What to Cache 
 
-## Requirements
+## MUST cache
 
-- Cache keys MUST include tenant identifier.
-- Keys MUST include user identifier when applicable.
-- Keys MUST include versioning to prevent stale schema conflicts.
+| Item                            | Where     | Why                                |
+| ------------------------------- | --------- | ---------------------------------- |
+| Hashed bundles + symbol packs   | CDN + SW  | eliminates network + repeat parse  |
+| Symbol metadata index           | IndexedDB | instant palette search             |
+| Scene autosave snapshot         | IndexedDB | crash recovery, instant reload     |
+| Bounds + text measures + Path2D | Memory    | removes per-frame recompute        |
+| Spatial index                   | Memory    | hit-test doesn’t scan all elements |
 
-### Example
+## Must NOT cache
+
+
+* full render frames
+* pointermove logs
+
+---
+
+# 3) Cache Keys (Minimum)
+
+All keys include: `schemaVersion`, plus `packHash` where relevant.
+
+Examples:
+
 ```
-dashboard:{tenantId}:{userId}:v1
-search_suggestions:{tenantId}:{query}
+assets:symbolPack:{packId}:{packHash}:v2
+idb:symbolIndex:{packHash}:v2
+idb:sceneSnapshot:{docId}:v2
+mem:bounds:{elementId}:{rev}:v1
+mem:text:{fontKey}:{textHash}:v1
+mem:gridCell:{cellId}:v1
 ```
 
+---
+
+# 4) Observability (Minimum viable)
+
+Track only:
+
+* p95 frame time during drag/zoom
+* hit-test duration
+* long tasks count (>50ms)
+* cache hit rate (bounds/text) in dev mode
+
+**Goal:** detect regressions early without building a full platform.
 
 ---
 
-# 4. Cache TTL Guidelines
+# 5) Failure Behavior (Minimum)
 
-| Data | TTL |
-|------|-----|
-| Dashboard summary | 30–60 seconds |
-| Search suggestions | 5–30 seconds |
-| Feature flags | 5 minutes |
-| Session metadata | session lifetime |
-| Rate limits | configurable |
+* If IndexedDB unavailable: keep working in memory + show non-blocking warning.
+* If Service Worker fails: app still loads normally via CDN.
 
 ---
 
-# 5. Cache Invalidation Strategy
+# Ownership (Single Person)
 
-## Requirements
+As caching owner, you must enforce:
 
-- Cache MUST be invalidated on data updates.
-- Write-through or write-behind strategies allowed.
-- Event-driven invalidation recommended.
-
----
-
-## Example Invalidation
-
-| Action | Invalidate |
-|-------|------------|
-| Task created | dashboard cache |
-| Vault item updated | search metadata cache |
-| Role change | permission cache |
+* hashed assets + headers
+* SW precache strategy + versioning
+* IndexedDB schema + snapshot eviction
+* rev-based invalidation + LRU caps
+* a perf regression checklist in PRs
 
 ---
 
-# 6. Tenant-Safe Caching
+## Further improvements
 
-## Requirements
-
-- Cache MUST never mix data across tenants.
-- Tenant ID must be part of cache key.
-- Shared caches must enforce isolation.
-
----
-
-# 7. Consistency Strategy
-
-## Approaches
-
-### Cache-Aside (Recommended)
-- Application reads cache first.
-- On miss → fetch from DB → populate cache.
-
-### Write-Through
-- Writes update both DB and cache.
-
-### Write-Behind (Use Carefully)
-- Writes buffered before DB persistence.
-
----
-
-# 8. Caching & Search
-
-## Requirements
-
-- Cache search suggestions only.
-- Do not cache full search results unless scoped and short-lived.
-- Invalidate cache when index updates.
-
----
-
-# 9. Rate Limiting & Abuse Protection
-
-## Requirements
-
-- Store rate limit counters in distributed cache.
-- Use sliding window or token bucket algorithms.
-- Expire counters automatically.
-
----
-
-# 10. Observability & Monitoring
-
-## Metrics to Track
-
-- Cache hit ratio
-- Cache miss rate
-- Eviction rate
-- Cache latency
-- Memory utilization
-
----
-
-# 11. Failure Handling
-
-## Cache Failure Behavior
-
-- System MUST fall back to database.
-- Cache failure MUST NOT cause downtime.
-- Alerts triggered for cache outage.
-
----
-
-# 12. Performance Impact
-
-## Targets
-
-- Cache hit ratio > 80% for dashboard queries.
-- Cache latency < 5ms.
-- Reduce DB load by ≥ 50%.
-
----
-
-# 13. Security Considerations
-
-## Requirements
-
-- Never cache secrets or decrypted data.
-- Encrypt cache at rest if supported.
-- Protect cache access with authentication.
-
----
-
-# 14. Risks & Mitigations
-
-| Risk | Impact | Mitigation |
-|------|--------|-----------|
-| Stale data | Medium | TTL + invalidation |
-| Cross-tenant data leak | Critical | tenant-safe keys |
-| Cache poisoning | High | validation |
-| Cache outage | Medium | DB fallback |
-| Sensitive data caching | Critical | strict exclusions |
-
----
-
-# 15. Future Enhancements
-
-- Adaptive caching based on usage patterns
-- Edge caching for global performance
-- Cache warming for frequently accessed data
-- Tiered caching (L1 in-memory, L2 distributed)
-
----
-
-_Last reviewed: YYYY-MM-DD_  
-_Owner: <ENGINEERING_OWNER>_  
-_Status: Draft_ -->
+1. Add CI perf test that simulates drag/zoom and fails on p95 regression.
+2. Add a “perf budget” file and enforce it in PR checks.
+3. Implement cross-tab scene lock + last-write-wins to avoid IDB corruption.
+4. Add automatic cache wipe on schema mismatch with safe migration hooks.
+5. Introduce “low-end mode” auto-trigger when FPS drops (adaptive quality).
+6. Log cache evictions + memory usage to spot leaks early.
+7. Use Worker for symbol indexing + export so main thread never spikes.
+8. Adopt “commit-on-pointerup” for heavy state, keep pointermove mutable.
+9. Build a dev HUD: FPS + hit-test ms + rendered elements count.
+10. Add synthetic “worst-case scene” fixtures (5k elements) and benchmark routinely.

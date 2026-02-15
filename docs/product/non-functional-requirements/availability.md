@@ -1,22 +1,20 @@
-<!-- # Availability Requirements
+# Availability Requirements
 
 ## Purpose
 
 This document defines availability targets, fault tolerance expectations,
-and resilience strategies for the Personal Digital Life Management Platform.
+and resilience strategies.
 
-High availability is critical for ensuring users can access tasks, vault
-data, and search capabilities without disruption.
 
 ---
 
 ## Availability Principles
 
-1. **Graceful Degradation** — partial functionality during failures.
-2. **No Single Point of Failure** — redundancy across critical components.
-3. **Fail Fast & Recover Quickly** — detect and recover from failures.
-4. **User Data Safety First** — prioritize data integrity over uptime.
-5. **Observable Reliability** — measure and monitor availability.
+1. **Graceful Degradation** => partial functionality during failures.
+2. **No Single Point of Failure** => redundancy across critical components.
+3. **Fail Fast & Recover Quickly** => detect and recover from failures.
+4. **User Data Safety First** => prioritize data integrity over uptime.
+5. **Observable Reliability** => measure and monitor availability.
 
 ---
 
@@ -26,15 +24,9 @@ data, and search capabilities without disruption.
 
 | Component | Target Availability |
 |----------|--------------------|
-| API services | 99.9% |
+| API services | 99.9%  (if user is continuos accessing server can sleep due to inactivity)|
 | Authentication | 99.9% |
-| Vault access | 99.95% |
-| Search | 99.9% |
-| Dashboard | 99.9% |
 
-### Notes
-- Vault has higher target due to critical nature.
-- Planned maintenance excluded from SLO calculations.
 
 ---
 
@@ -42,9 +34,7 @@ data, and search capabilities without disruption.
 
 | Component | Error Budget (Monthly) |
 |----------|-----------------------|
-| API | ~43 minutes |
-| Vault | ~21 minutes |
-| Search | ~43 minutes |
+| API | ~1 hour 
 
 Error budgets define acceptable downtime before release velocity must slow.
 
@@ -52,40 +42,17 @@ Error budgets define acceptable downtime before release velocity must slow.
 
 # 2. Failure Modes & Expected Behavior
 
-## 2.1 Database Failure
+## Database Failure
 
 ### Expected Behavior
 - API returns graceful error.
+- API response get delayed due to server inactivity and cold start.
 - No data corruption.
 - Retry with backoff.
 - Alert triggered.
 
 ---
 
-## 2.2 Search Index Failure
-
-### Expected Behavior
-- System falls back to degraded search.
-- Core functionality remains available.
-- Reindex triggered.
-
----
-
-## 2.3 Vault Service Failure
-
-### Expected Behavior
-- Vault operations disabled.
-- Non-sensitive modules remain operational.
-- User notified of degraded mode.
-
----
-
-## 2.4 Auth Service Failure
-
-### Expected Behavior
-- Existing sessions continue until expiration.
-- New logins temporarily unavailable.
-- Alert triggered.
 
 ---
 
@@ -95,7 +62,7 @@ Error budgets define acceptable downtime before release velocity must slow.
 
 - Deploy services across multiple instances.
 - Database replication required.
-- Load balancer distributes traffic.
+- Load balancer distributes traffic. (not in v1.x.x)
 
 ---
 
@@ -114,9 +81,7 @@ Error budgets define acceptable downtime before release velocity must slow.
 
 | Failure | Degraded Behavior |
 |--------|------------------|
-| Search unavailable | Disable search, show message |
-| Vault service slow | Allow dashboard without vault |
-| Metrics pipeline failure | Continue operations, log locally |
+| login unavailable | Disable login, show message |
 
 ---
 
@@ -137,8 +102,6 @@ Error budgets define acceptable downtime before release velocity must slow.
 - Backup integrity verification required.
 - Restore procedures documented.
 
-See:
-`/docs/technical/architecture/disaster-recovery.md`
 
 ---
 
@@ -147,7 +110,7 @@ See:
 ## Requirements
 
 - Zero-downtime deployments preferred.
-- Blue/green or rolling deployments recommended.
+- Blue/green or rolling deployments recommended. (not in v1.x.x)
 - Health checks required before routing traffic.
 
 ---
@@ -164,7 +127,7 @@ See:
 
 # 8. Monitoring & Alerting
 
-## Metrics to Monitor
+## Metrics to Monitor (Using grafana)
 
 - Service uptime
 - Error rates
@@ -191,37 +154,17 @@ See:
 
 ---
 
-# 10. Availability Risks & Mitigations
+# 10. Future Enhancements in v2 onwards
 
 | Risk | Impact | Mitigation |
 |------|--------|-----------|
-| Single DB instance | Critical | replication |
-| Search service outage | High | degraded fallback |
-| Vault downtime | Critical | redundancy |
-| Noisy neighbor tenant | Medium | resource quotas |
+| Single DB instance | Critical | replication | 
 | Deployment failures | High | rolling deploys |
 
 ---
 
-# 11. Planned Maintenance Policy
 
-## Requirements
 
-- Maintenance windows communicated in advance.
-- Read-only mode used when possible.
-- Backups taken before maintenance.
-
----
-
-# 12. Future Enhancements
-
-- Multi-region deployment
-- Active-active failover
-- Edge caching for availability
-- Automated failover orchestration
-
----
-
-_Last reviewed: YYYY-MM-DD_  
-_Owner: <OPERATIONS_OWNER>_  
-_Status: Draft_ -->
+_Last reviewed: 15 february 2026 
+_Owner: Pratik B. Raktate_  
+_Status: In Review
