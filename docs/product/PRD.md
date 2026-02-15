@@ -1,12 +1,12 @@
-# Product Requirements Document (PRD)
+# Product Requirements Document
 
 ## 1. Document Control
 
 **Version:** 1.0.0
 
-**Status:** In Review
+**Status:** Aproved
 
-**Author:** Your name here
+**Author:** Pratik B. Raktate
 
 **Reviewer:** Pratik B. Raktate
 
@@ -71,10 +71,7 @@ Developers, Engineers, software engineering students.
 Format:
 
 ```
-As a user i want free tier system disign tool 
-I want capability to add colourfull images of
-compnents liker server, client and more so that 
-benefits me to visualize my application architecture.
+As a user i want free tier system disign tool. I want capability to add colourfull images of compnents liker server, client and more so that benefits me to visualize my application architecture.
 ```
 
 ### 6.2 Key Use Cases
@@ -114,7 +111,7 @@ benefits me to visualize my application architecture.
 
 ### 7.2 Acceptance Criteria
 
-User can go on website with the good latency and lagging (latency < 500m0) user can create diagrams and design architecture seamlessly 
+User can go on website with the good latency and lagging (latency < 500ms) user can create diagrams and design architecture seamlessly 
 
 0 lags and bugs
 
