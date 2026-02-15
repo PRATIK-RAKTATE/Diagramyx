@@ -5,11 +5,17 @@
 ## 1. Document Control
 
 **Version:** 1.0.0
+
 **Status:** In Review
-**Author:** Your name here
+
+**Author:** Pravin Pagar
+
 **Reviewer:** Pratik B. Raktate
+
 **Last Updated:** 15 February 2026
+
 **Stakeholders:** Engineering team
+
 
 ---
 
@@ -38,13 +44,18 @@ This document covers technical design and implementation details. It excludes pr
 
 Describe the overall system structure and major components.
 
-**Example components:**
+```
+Client Browser
+├── UI with drawing engine 
+├── Local Storage
 
-* Client (Web/Mobile)
-* API Server
-* Database
-* Cache layer
-* External services
+API Services
+├── OAuth
+├── Express API (internal)
+
+Database
+├── Monogodb atlas
+ ```
 
 ### 3.2 Architecture Diagram
 
@@ -53,7 +64,7 @@ Provide a diagram or ASCII representation.
 ```
 Client → API → Database
            ↓
-        Cache
+    external services
 ```
 
 ---
@@ -73,11 +84,12 @@ Describe the system’s technical capabilities.
 * Token strategy (JWT, sessions)
 * Session expiration & revocation
 
-### 4.3 Caching Strategy
+### 4.3 Document Management
 
-* In-memory cache / Redis
-* Cache invalidation approach
+* Session management
+* Import and export of diagrams files
 
+<!--
 ### 4.4 Background Processing
 
 * Job queues
@@ -87,29 +99,31 @@ Describe the system’s technical capabilities.
 
 * Storage solution
 * Access control
-
+-->
 ### 4.6 login with google (Oauth)
-
+  * Login user with google
 ---
 
 ## 5. Technology Stack
 
 ### 5.1 Languages & Runtime
 
-* Node.js (vXX)
-* TypeScript (if used)
+* React (v19.2)
+* Node.js (v22)
 
 ### 5.2 Frameworks & Libraries
 
 * Express / Fastify / NestJS
 * Validation libraries
 * Logging libraries
+* Tailwind CSS 
+* NextAuth - for Oauth integration
+* JointJS/PixiJS
 
 ### 5.3 Database & Storage
 
 * Primary database (e.g., PostgreSQL, MongoDB)
-* Caching layer (e.g., Redis)
-* File storage (e.g., S3, local storage)
+* Local storage
 
 ### 5.4 Tooling
 
@@ -117,10 +131,14 @@ Describe the system’s technical capabilities.
 * Testing framework
 * CI/CD tools
 * Package manager (npm/pnpm)
+* State Management (Redux Toolkit)
 
 ### 5.5 Rationale
 
-Explain why these technologies were chosen.
+these technologies were selected to archive
+  * Low latency
+  * horizontal scalability
+  * maintainable code architecture
 
 ---
 
@@ -158,7 +176,7 @@ Standard error response format.
 
 ### 7.1 Authentication Security
 
-* Password hashing (bcrypt/argon2)
+* Password hashing (bcrypt)
 * Token expiration
 * Secure cookies
 
