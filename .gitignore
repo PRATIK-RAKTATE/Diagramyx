@@ -1,0 +1,13 @@
+node_modules
+.env
+dist
+build
+coverage
+logs
+*.log
+*.tmp
+.DS_Store
+.idea
+.vscode
+*.suo
+*.ntvs* 
