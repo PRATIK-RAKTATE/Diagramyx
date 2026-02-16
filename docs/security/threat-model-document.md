@@ -1,16 +1,12 @@
-## don't use chatgpt ask me(pratik raktate about any issues) if not available just wrote in that "comment: "i can't understand this do this in the PR review"" 
-
-
-
 # Threat Model Document — Password-Based Authentication
 
 ## 1. Document Control
 
 **Version:** 1.0.0
-**Status:** In Review
+**Status:** Approved
 **Author:** Yogesh D. Chavan
 **Reviewer:** Pratik B. Raktate
-**Last Updated:** 15 February 2026
+**Last Updated:** 16 February 2026
 **Stakeholders:** Engineering team
 
 ---
@@ -33,8 +29,8 @@ This document identifies threats and mitigations for the Outh-based login flow t
 **Out of scope**
 
 * OAuth/social login
-* Authorization/roles => V2
-* Password reset flow => V2
+* Authorization/roles 
+* Password reset flow
 * Infrastructure-level threats
 
 ---
@@ -43,10 +39,10 @@ This document identifies threats and mitigations for the Outh-based login flow t
 
 ### 3.1 Login Flow
 
-1. User submits email and password. => V2
+1. User submits email and password.
 2. Server validates input.
 3. Server retrieves user record.
-4. Password hash is verified. => V2
+4. Password hash is verified. 
 5. Session/token is issued.
 6. User is authenticated.
 
