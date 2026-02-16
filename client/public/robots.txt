@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://diagramyx.netlify.app/sitemap.xml
