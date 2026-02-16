@@ -1,18 +1,16 @@
-## don't use chatgpt ask me(pratik raktate about any issues) if not available just wrote in that "comment: "i can understand this do this in the PR review"" 
-
 # Technical Requirements Document (TRD)
 
 ## 1. Document Control
 
 **Version:** 1.0.0
 
-**Status:** In Review
+**Status:** Approved
 
 **Author:** Pravin Pagar
 
 **Reviewer:** Pratik B. Raktate
 
-**Last Updated:** 15 February 2026
+**Last Updated:** 16 February 2026
 
 **Stakeholders:** Engineering team
 
@@ -75,7 +73,7 @@ Describe the system’s technical capabilities.
 
 ### 4.1 API Layer
 
-* REST or GraphQL
+* REST 
 * Request validation
 * Error handling standards
 
@@ -113,12 +111,12 @@ Describe the system’s technical capabilities.
 
 ### 5.2 Frameworks & Libraries
 
-* Express / Fastify / NestJS
+* Express 
 * Validation libraries
 * Logging libraries
 * Tailwind CSS 
 * NextAuth - for Oauth integration
-* JointJS/PixiJS
+* PixiJS
 
 ### 5.3 Database & Storage
 
@@ -130,7 +128,7 @@ Describe the system’s technical capabilities.
 * Linting (ESLint)
 * Testing framework
 * CI/CD tools
-* Package manager (npm/pnpm)
+* Package manager npm
 * State Management (Redux Toolkit)
 
 ### 5.5 Rationale
@@ -151,7 +149,7 @@ these technologies were selected to archive
 
 ### 6.2 Versioning Strategy
 
-* URL versioning (`/v1/`)
+* URL versioning (`api/v1/`)
 * Backward compatibility rules
 
 ### 6.3 Error Handling
@@ -197,14 +195,11 @@ Standard error response format.
 ### 8.1 Performance Strategies
 
 * Caching
-* Query optimization
-* Pagination
 
 ### 8.2 Scalability Approach
 
-* Horizontal scaling
+* Horizontal manual scaling
 * Stateless services
-* Load balancing
 
 ---
 
