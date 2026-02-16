@@ -1,16 +1,12 @@
-## don't use chatgpt ask me(pratik raktate about any issues) if not available just wrote in that "comment: "i can understand this do this in the PR review"" 
-
-
-
 # Threat Model Document — Password-Based Authentication
 
 ## 1. Document Control
 
 **Version:** 1.0.0
-**Status:** In Review
-**Author:** Your name here
+**Status:** Approved
+**Author:** Yogesh D. Chavan
 **Reviewer:** Pratik B. Raktate
-**Last Updated:** 15 February 2026
+**Last Updated:** 16 February 2026
 **Stakeholders:** Engineering team
 
 ---
@@ -19,13 +15,13 @@
 
 ### 2.1 Purpose
 
-This document identifies threats and mitigations for the password-based login flow to ensure secure handling of user credentials and session creation.
+This document identifies threats and mitigations for the Outh-based login flow to ensure secure handling of user credentials and session creation.
 
 ### 2.2 Scope
 
 **In scope**
 
-* Email/password login
+* Outh login
 * Credential validation
 * Session/token creation
 * Login rate limiting
@@ -33,7 +29,7 @@ This document identifies threats and mitigations for the password-based login fl
 **Out of scope**
 
 * OAuth/social login
-* Authorization/roles
+* Authorization/roles 
 * Password reset flow
 * Infrastructure-level threats
 
@@ -46,7 +42,7 @@ This document identifies threats and mitigations for the password-based login fl
 1. User submits email and password.
 2. Server validates input.
 3. Server retrieves user record.
-4. Password hash is verified.
+4. Password hash is verified. 
 5. Session/token is issued.
 6. User is authenticated.
 
@@ -84,16 +80,19 @@ User → Client → API → Database
 ### 6.1 Spoofing
 
 **Threat:** Credential stuffing / brute-force login
+
 **Impact:** Unauthorized account access
 
 ### 6.2 Tampering
 
 **Threat:** Manipulating login requests (e.g., modified payload)
+
 **Impact:** Authentication bypass attempts
 
 ### 6.3 Repudiation
 
 **Threat:** User denies login activity
+
 **Impact:** Lack of audit trail
 
 ### 6.4 Information Disclosure
@@ -101,18 +100,20 @@ User → Client → API → Database
 **Threats:**
 
 * Detailed error messages reveal valid emails
-* Password hash leakage via logs
+* Password hash leakage via logs => V2
 
 **Impact:** Account enumeration, credential attacks
 
 ### 6.5 Denial of Service
 
 **Threat:** Login endpoint flooding
+
 **Impact:** Service degradation
 
 ### 6.6 Elevation of Privilege
 
 **Threat:** Session fixation or token reuse
+
 **Impact:** Unauthorized access escalation
 
 ---
@@ -121,8 +122,8 @@ User → Client → API → Database
 
 ### 7.1 Credential Protection
 
-* Use **bcrypt or argon2** for password hashing
-* Enforce password strength rules
+* Use **bcrypt ** for password hashing => V2
+* Enforce password strength rules =>V2
 * Never log passwords or hashes
 
 ### 7.2 Brute Force Protection
@@ -133,7 +134,7 @@ User → Client → API → Database
 
 ### 7.3 Secure Authentication Flow
 
-* Constant-time password comparison
+* Constant-time password comparison => V2
 * Generic error messages (“Invalid credentials”)
 * Input validation & sanitization
 
@@ -167,7 +168,7 @@ User → Client → API → Database
 
 ## 9. Security Checklist for Implementation
 
-* [ ] Passwords hashed with bcrypt/argon2
+* [ ] Passwords hashed with bcrypt => V2
 * [ ] Rate limiting enabled on login
 * [ ] Generic error messages used
 * [ ] Secure cookies configured
