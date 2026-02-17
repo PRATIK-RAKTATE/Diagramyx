@@ -1,0 +1,14 @@
+name: Architecture Task
+description: Create an architecture-related task
+title: "[ARCH] <short title>"
+labels: ["architecture", "mvp"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      placeholder: Describe the task
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
