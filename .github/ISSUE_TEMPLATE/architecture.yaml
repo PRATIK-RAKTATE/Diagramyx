@@ -1,6 +1,6 @@
 name: Architecture Task
 description: Create an architecture-related task
-title: "[ARCH] <short title>"
+title: "arch(core): Task Title"
 labels: ["architecture", "mvp"]
 body:
   - type: textarea
