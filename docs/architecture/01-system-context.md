@@ -5,8 +5,7 @@ Diagramyx MVP is a web-based diagram system that enables users to create, store,
 
 
 ### System Context Diagram (C4 Level 1)
-
-![System Context Diagram](./architecture-context.png)
+![System Context Diagram](../assets/images/architecture-context.png)
 
 Shows:
 
